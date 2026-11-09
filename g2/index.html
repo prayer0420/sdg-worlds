@@ -41,8 +41,11 @@ button{font:inherit;font-weight:800;padding:11px 20px;border:2px solid var(--lin
     } catch (e) { say('열지 못했어요. 인터넷 연결을 확인해 주세요.', true); }
   }
   document.getElementById('f').onsubmit = (e) => { e.preventDefault(); unlock(document.getElementById('k').value); };
-  // 열쇠 링크(…/g2/#k=열쇠)로 들어오면 바로 연다. 주소창에서는 열쇠를 지운다
-  const h = location.hash.match(/^#k=(.+)$/);
-  if (h) { history.replaceState(null, '', location.pathname + location.search); unlock(decodeURIComponent(h[1])); }
+  // 열쇠 링크(…/g2/#k=열쇠)로 들어오면 바로 연다(이 페이지를 띄워 둔 채 링크를 눌러도). 주소창에서는 열쇠를 지운다
+  const fromLink = () => {
+    const h = location.hash.match(/^#k=(.+)$/);
+    if (h) { history.replaceState(null, '', location.pathname + location.search); unlock(decodeURIComponent(h[1])); }
+  };
+  addEventListener('hashchange', fromLink); fromLink();
 })();
 </script></body></html>

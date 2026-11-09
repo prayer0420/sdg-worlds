@@ -1,0 +1,48 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>2학년 교재 게임</title>
+<style>
+:root{--bg:#fff8ec;--card:#fffdf8;--ink:#2b2333;--soft:#6a5d55;--line:#23304a;--go:#e8743b;--bad:#c2410c}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px max(16px,env(safe-area-inset-left,0px));background:var(--bg);color:var(--ink);font:17px/1.6 system-ui,"Malgun Gothic","Apple SD Gothic Neo",sans-serif}
+main{width:min(420px,100%);display:grid;gap:14px;padding:28px 24px;border:2px solid var(--line);border-radius:22px;background:var(--card);box-shadow:0 6px 0 var(--line)}
+.back{justify-self:start;color:var(--soft);font-size:14px;text-decoration:none}.lock{font-size:46px;line-height:1}
+h1{margin:0;font-size:26px;text-wrap:balance}p{margin:0;color:var(--soft)}
+form{display:flex;gap:8px;flex-wrap:wrap}input{flex:1 1 180px;min-width:0;font:inherit;padding:11px 14px;border:2px solid var(--line);border-radius:12px;background:#fff;color:var(--ink)}
+button{font:inherit;font-weight:800;padding:11px 20px;border:2px solid var(--line);border-radius:999px;background:var(--go);color:#fff;cursor:pointer}
+#msg{min-height:1.6em;font-size:15px}#msg.bad{color:var(--bad);font-weight:700}
+</style></head><body><main>
+<a class="back" href="/sdg-worlds/">← 포털</a>
+<div class="lock" aria-hidden="true">🔒</div>
+<h1>2학년 교재 게임</h1>
+<p>『Our Community, Our Home』 책으로 노는 영어 게임이에요. 선생님이 알려 준 열쇠를 넣으면 열려요. 한 번 열면 이 기기에서는 계속 열려 있어요.</p>
+<form id="f"><input id="k" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="sdg-xxxx-xxxx-xxxx" aria-label="열쇠" required><button>열기</button></form>
+<p id="msg" role="status"></p>
+</main>
+<script>
+(async () => {
+  const BASE = '/sdg-worlds/', msg = document.getElementById('msg');
+  const say = (t, bad) => { msg.textContent = t; msg.className = bad ? 'bad' : ''; };
+  if (!('serviceWorker' in navigator) || !window.crypto || !crypto.subtle) { say('이 브라우저에서는 열 수 없어요. 크롬·엣지·사파리 최신판으로 열어 주세요.', true); return; }
+  const reg = navigator.serviceWorker.register(BASE + 'sw.js', { scope: BASE });
+  async function name(rel) { const d = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(rel)); return Array.from(new Uint8Array(d), (b) => b.toString(16).padStart(2, '0')).join('').slice(0, 24); }
+  const hex = (s) => new Uint8Array(s.match(/../g).map((x) => parseInt(x, 16)));
+  const next = new URLSearchParams(location.search).get('next');
+  async function unlock(pw) {
+    say('여는 중이에요…');
+    try {
+      const meta = await fetch(BASE + 'locked/lock.json', { cache: 'no-cache' }).then((r) => r.json());
+      const raw = await crypto.subtle.importKey('raw', new TextEncoder().encode(pw.trim().toLowerCase()), 'PBKDF2', false, ['deriveKey']);
+      const key = await crypto.subtle.deriveKey({ name: 'PBKDF2', salt: hex(meta.salt), iterations: meta.iter, hash: 'SHA-256' }, raw, { name: 'AES-GCM', length: 256 }, false, ['decrypt']);
+      const buf = new Uint8Array(await fetch(BASE + 'locked/' + await name('check') + '.bin', { cache: 'no-cache' }).then((r) => r.arrayBuffer()));
+      try { await crypto.subtle.decrypt({ name: 'AES-GCM', iv: buf.slice(0, 12) }, key, buf.slice(12)); }
+      catch (e) { say('열쇠가 맞지 않아요. 다시 확인해 주세요.', true); return; }
+      const db = await new Promise((res, rej) => { const r = indexedDB.open('sdg-lock', 1); r.onupgradeneeded = () => r.result.createObjectStore('k'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+      await new Promise((res, rej) => { const tx = db.transaction('k', 'readwrite'); tx.objectStore('k').put(key, 'key'); tx.oncomplete = res; tx.onerror = () => rej(tx.error); });
+      await reg; await navigator.serviceWorker.ready;
+      location.replace(next && next.startsWith(BASE) ? next : BASE + 'g2/');
+    } catch (e) { say('열지 못했어요. 인터넷 연결을 확인해 주세요.', true); }
+  }
+  document.getElementById('f').onsubmit = (e) => { e.preventDefault(); unlock(document.getElementById('k').value); };
+  // 열쇠 링크(…/g2/#k=열쇠)로 들어오면 바로 연다. 주소창에서는 열쇠를 지운다
+  const h = location.hash.match(/^#k=(.+)$/);
+  if (h) { history.replaceState(null, '', location.pathname + location.search); unlock(decodeURIComponent(h[1])); }
+})();
+</script></body></html>

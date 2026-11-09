@@ -91,5 +91,5 @@
     return j;
   }
 
-  window.SDG = { me, setMe, goals, toast, join, passport, stamp };
+  window.SDG = { me, setMe, goals, toast, join, passport, stamp, noServer: NO_SERVER };
 })();

@@ -96,7 +96,21 @@
     .worldsMap .bg-go { font-weight: 800; background: #fff; color: #5a3fb0; border-radius: 999px; padding: 8px 14px; white-space: nowrap; }
     @media (max-width: 640px) { .worldsMap { grid-template-columns: 1fr; } }
   </style>
-  
+  <a class="bookGames" href="/sdg-worlds/g2/">
+    <span style="display:grid;place-items:center;width:120px;max-width:100%;aspect-ratio:16/9.2;border-radius:10px;border:2px solid #23304a;background:#fff3dd;font-size:40px">🔒</span>
+    <span class="bg-t"><b>📖 2학년 교재 게임 · Our Community, Our Home</b>
+      <span>책 24차시의 이야기·낱말·햄버거 문단으로 노는 영어+SDG 11 게임 4개 — 햄버거 플러스 가게, 낱말로 짓는 우리 동네, 길 찾기 탐험, 우리 반 동네 회의</span></span>
+    <span class="bg-go">열쇠로 열기 →</span>
+  </a>
+  <style>
+    .bookGames { display: grid; grid-template-columns: 120px 1fr auto; gap: 14px; align-items: center; margin: 0 0 18px; padding: 12px; border-radius: 18px; text-decoration: none; color: #23304a; background: #fff8ec; border: 2px solid #23304a; box-shadow: 0 5px 0 #23304a; }
+    .bookGames img { width: 120px; aspect-ratio: 16 / 9.2; object-fit: cover; border-radius: 10px; border: 2px solid #23304a; display: block; }
+    .bookGames .bg-t { display: grid; gap: 3px; min-width: 0; }
+    .bookGames .bg-t b { font-size: 17px; }
+    .bookGames .bg-t span { font-size: 14px; color: #5d5446; }
+    .bookGames .bg-go { font-weight: 800; background: #e8743b; color: #fff; border-radius: 999px; padding: 8px 14px; border: 2px solid #23304a; white-space: nowrap; }
+    @media (max-width: 560px) { .bookGames { grid-template-columns: 1fr; } .bookGames img { width: 100%; } }
+  </style>
 
   <div class="device" id="device"><span>이 기기 확인 중…</span></div>
 

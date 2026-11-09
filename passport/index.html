@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SDG 여권</title>
+<style>
+  :root { --bg: #fbf7ef; --paper: #ffffff; --ink: #1d1a2b; --sub: #6b6580; --line: #e7e0d2; color-scheme: light; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #110e1f; --paper: #1a1630; --ink: #f2ecff; --sub: #a99fc4; --line: rgba(255,255,255,.1); color-scheme: dark; } }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.55 system-ui, "Malgun Gothic", "Apple SD Gothic Neo", sans-serif; }
+  .wrap { max-width: 980px; margin: 0 auto; padding-block: 24px 48px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 18px; }
+  nav { display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+  nav a { color: var(--ink); text-decoration: none; font-weight: 700; padding: 7px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--paper); }
+  .cover { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; padding: 22px; border-radius: 20px; background: #19486A; color: #fff; }
+  .cover h1 { margin: 0; font-size: clamp(24px, 5vw, 34px); }
+  .cover p { margin: 4px 0 0; opacity: .85; }
+  .ring { width: 92px; height: 92px; border-radius: 50%; display: grid; place-items: center; font: 800 22px/1 system-ui, sans-serif; flex: none; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; }
+  .slot { position: relative; min-width: 0; display: grid; gap: 6px; padding: 14px; border-radius: 16px; background: var(--paper); border: 2px dashed var(--line); }
+  .slot .num { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; font: 800 18px/1 system-ui, sans-serif; color: #fff; background: var(--g); opacity: .35; }
+  .slot h3 { margin: 0; font-size: 15px; }
+  .slot p { margin: 0; font-size: 12.5px; color: var(--sub); }
+  .slot.on { border: 2px solid var(--g); }
+  .slot.on .num { opacity: 1; }
+  .stamp { position: absolute; right: 10px; top: 10px; transform: rotate(-12deg); font: 800 12px/1 system-ui, sans-serif; color: var(--g); border: 2px solid var(--g); border-radius: 8px; padding: 4px 6px; background: var(--paper); }
+  .where { font-size: 12px; color: var(--sub); }
+  .empty { padding: 28px; border-radius: 16px; background: var(--paper); border: 1px solid var(--line); text-align: center; display: grid; gap: 10px; justify-items: center; }
+  button { font: inherit; font-weight: 800; padding: 10px 16px; border-radius: 10px; border: 0; background: #FCC30B; color: #1d1a2b; cursor: pointer; }
+  .note { font-size: 12.5px; color: var(--sub); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav><a href="/sdg-worlds/">← 포털</a><button id="switch" type="button">다른 여권으로</button></nav>
+  <div id="root"></div>
+  <p class="note">목표 설명은 UN 공식 목표 페이지를 SDG 플랫폼 지식 모음에서 우리말로 요약한 것이에요. 도장은 이 PC의 포털 서버에 반 코드·별명으로만 저장돼요.</p>
+</div>
+<script src="/sdg-worlds/sdg/sdg.js"></script>
+<script>
+  const WHERE = { 'lobby-quiz': '로비 퀴즈', sumo: '말랑 스모', 'sumo-quiz': '퀴즈 스모', neon: '네온 바람골', tour: '라이브 투어', ar: 'AR 나무 심기', 'ar-quiz': 'AR 퀴즈', ocean: '바다 청소', water: '물발자국' };
+  const SPACE_URL = { sumo: '/sdg-worlds/sumo/', neon: '/sdg-worlds/neon/', ar: '/sdg-worlds/ar/', ocean: '/sdg-worlds/ocean/', water: '/sdg-worlds/ar/water/' };
+  async function draw() {
+    const root = document.getElementById('root');
+    const { goals, spaces } = await SDG.goals();
+    const pp = await SDG.passport();
+    if (!pp) {
+      root.innerHTML = '<div class="empty"><h2 style="margin:0">아직 여권이 없어요</h2><p class="note">반 코드와 별명만 있으면 바로 만들 수 있어요.</p><button id="mk">여권 만들기</button></div>';
+      document.getElementById('mk').onclick = () => SDG.join();
+      return;
+    }
+    const n = Object.keys(pp.stamps).length;
+    const pct = Math.round((n / 17) * 100);
+    root.innerHTML = `
+      <div class="cover">
+        <div class="ring" style="background:conic-gradient(#FCC30B ${pct}%, rgba(255,255,255,.18) 0)"><div class="ring" style="width:72px;height:72px;background:#19486A">${n}/17</div></div>
+        <div><h1>${pp.nick}의 SDG 여권</h1><p>반 ${pp.cls} · ${n === 17 ? '17개 목표를 모두 만났어요!' : `앞으로 ${17 - n}개 목표가 기다려요`}</p></div>
+      </div>
+      <div class="grid">${goals.map((g) => {
+        const s = pp.stamps[g.n];
+        const go = g.spaces.map((k) => `<a href="${SPACE_URL[k]}" style="color:inherit">${spaces[k].name}</a>`).join(' · ');
+        return `<div class="slot ${s ? 'on' : ''}" style="--g:${g.color}">
+          ${s ? `<div class="stamp">${WHERE[s.via] || '도장'}</div>` : ''}
+          <div class="num">${g.n}</div><h3>${g.name}</h3><p>${g.kid}</p>
+          <div class="where">${s ? new Date(s.at).toLocaleDateString('ko-KR') + ' 받음' : `만나는 곳: 네온 로비 퀴즈${go ? ' · ' + go : ''}`}</div></div>`;
+      }).join('')}</div>`;
+  }
+  document.getElementById('switch').onclick = () => SDG.join();
+  addEventListener('sdg:passport', draw);
+  draw();
+</script>
+</body>
+</html>

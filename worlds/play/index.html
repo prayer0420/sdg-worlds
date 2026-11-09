@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes">
+<title>SDG 세계</title>
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #1c1630; touch-action: none; }
+  #c { position: fixed; inset: 0; width: 100%; height: 100%; display: block; outline: none; background: #1c1630; }
+  #load { position: fixed; inset: 0; z-index: 3; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; color: #fff4e6;
+    font: 600 16px/1.4 system-ui, "Malgun Gothic", "Apple SD Gothic Neo", sans-serif; background: radial-gradient(ellipse at 50% 60%, #3a2a5a 0%, #1c1630 70%); transition: opacity .5s; }
+  #load.done { opacity: 0; pointer-events: none; }
+  #load h1 { margin: 0; font-size: 28px; text-align: center; }
+  #load .g { width: 64px; height: 64px; border-radius: 16px; display: grid; place-items: center; font: 800 30px/1 system-ui, sans-serif; color: #fff; animation: bob 1.2s ease-in-out infinite; }
+  @keyframes bob { 50% { transform: translateY(-8px); } }
+  .bar { width: min(280px, 70vw); height: 8px; border-radius: 8px; background: rgba(255, 255, 255, .14); overflow: hidden; }
+  .bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #ffb35c, #ff6b8b); transition: width .15s; }
+  #pct { font-size: 13px; opacity: .7; font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+<canvas id="c" tabindex="-1"></canvas>
+<div id="load"><div class="g" id="lg">SDG</div><h1 id="lt">SDG 세계로 들어가는 중…</h1><div class="bar"><i id="fill"></i></div><div id="pct">0%</div></div>
+<script src="/sdg-worlds/sdg/sdg.js"></script>
+<script>
+  var canvas = document.getElementById("c");
+  var buildUrl = "Build";
+  var loaderUrl = buildUrl + "/540c23cf8265331b29ad3f1f401f5721.loader.js";
+  var config = {
+    arguments: [],
+    dataUrl: buildUrl + "/3a52f4d134a521fdb93ef5252a64c015.data.gz",
+    frameworkUrl: buildUrl + "/ab70e256156649b946e54fa2e54c00cf.framework.js.gz",
+    codeUrl: buildUrl + "/81c08bebabf13f4224c395c7301a0dde.wasm.gz",
+    streamingAssetsUrl: "StreamingAssets",
+    companyName: "SDG",
+    productName: "SDG Worlds",
+    productVersion: "1.0",
+    devicePixelRatio: Math.min(window.devicePixelRatio || 1, /Mobi|Android/i.test(navigator.userAgent) ? 1.25 : 1.5),
+    showBanner: function (msg, type) { if (type === "error") document.getElementById("lt").textContent = msg; }
+  };
+  // 불러오는 동안 어떤 세계인지 보여 준다(포털의 세계 목록과 같은 이름)
+  var wid = new URLSearchParams(location.search).get("w") || "b1-14";
+  var goal = +(wid.split("-")[1] || 0);
+  var COLORS = ["", "#E5243B", "#DDA63A", "#4C9F38", "#C5192D", "#FF3A21", "#26BDE2", "#FCC30B", "#A21942", "#FD6925", "#DD1367", "#FD9D24", "#BF8B2E", "#3F7E44", "#0A97D9", "#56C02B", "#00689D", "#19486A"];
+  document.getElementById("lg").textContent = goal || "SDG"; document.getElementById("lg").style.background = COLORS[goal] || "#888";
+  fetch("/sdg-worlds/worlds/list.json").then(function (r) { return r.json(); }).then(function (l) { var w = l.find(function (x) { return x.id === wid; }); if (w) document.getElementById("lt").textContent = w.title + " · " + w.titleKo; }).catch(function () {});
+
+  // 유니티가 부른다(Worlds.jslib): 세계를 마치면 SDG 여권 도장, 나가기는 세계 목록으로
+  window.worldEvent = function (e) {
+    if (!e) return;
+    if (e.type === "exit") { location.href = "/sdg-worlds/worlds/"; return; }
+    if (e.type === "worldDone") {
+      try { var d = JSON.parse(localStorage.getItem("worlds.done") || "{}"); d[e.id] = Date.now(); localStorage.setItem("worlds.done", JSON.stringify(d)); } catch (x) {}
+      if (window.SDG) SDG.stamp(e.goal, "world-b" + e.band, "SDG " + e.goal + " 세계를 마쳤어요!");
+    }
+  };
+
+  var fill = document.getElementById("fill"), pct = document.getElementById("pct");
+  var script = document.createElement("script");
+  script.src = loaderUrl;
+  script.onload = function () {
+    createUnityInstance(canvas, config, function (p) { fill.style.width = Math.round(p * 100) + "%"; pct.textContent = Math.round(p * 100) + "%"; })
+      .then(function (instance) { window.unityInstance = instance; document.getElementById("load").classList.add("done"); canvas.focus(); })
+      .catch(function (m) { document.getElementById("lt").textContent = "불러오지 못했어요: " + m; });
+  };
+  var got = 0;
+  function inflate(url, type) {
+    return fetch(url).then(function (r) {
+      if (!r.ok) throw new Error(url + " " + r.status);
+      var count = new TransformStream({ transform: function (c, ctl) {
+        got += c.length; var p = Math.min(99, Math.round(got / 15804359 * 100));
+        if (typeof fill !== "undefined") fill.style.width = p + "%";
+        if (typeof pct !== "undefined") pct.textContent = p + "%";
+        ctl.enqueue(c);
+      } });
+      return new Response(r.body.pipeThrough(count).pipeThrough(new DecompressionStream("gzip")), { headers: { "Content-Type": type } }).blob();
+    }).then(function (b) { return URL.createObjectURL(b); });
+  }
+  config.cacheControl = function () { return "no-store"; };   // blob 주소는 매번 달라서 유니티 캐시에 쌓이기만 한다
+  Promise.all([inflate(config.dataUrl, "application/octet-stream"), inflate(config.frameworkUrl, "text/javascript"), inflate(config.codeUrl, "application/wasm")])
+    .then(function (u) { config.dataUrl = u[0]; config.frameworkUrl = u[1]; config.codeUrl = u[2]; document.body.appendChild(script); });
+</script>
+</body>
+</html>

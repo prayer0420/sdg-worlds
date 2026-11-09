@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes">
+<title>말랑 스모</title>
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #1d1220; touch-action: none; }
+  #c { position: fixed; inset: 0; width: 100%; height: 100%; display: block; outline: none; background: #1d1220; }
+  #load {
+    position: fixed; inset: 0; z-index: 3; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+    color: #ffe8f1; font: 600 16px/1.4 system-ui, "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+    background: radial-gradient(ellipse at 50% 60%, #4a2340 0%, #1d1220 70%); transition: opacity .35s;
+  }
+  #load.done { opacity: 0; pointer-events: none; }
+  .blob { width: 86px; height: 72px; border-radius: 50% 50% 44% 44%; background: #ffb4cf; position: relative; animation: squish .9s ease-in-out infinite; box-shadow: inset -8px -10px 0 rgba(219, 112, 150, .45); }
+  .blob::before, .blob::after { content: ""; position: absolute; top: 25px; width: 9px; height: 12px; border-radius: 50%; background: #3a1f2b; }
+  .blob::before { left: 25px; } .blob::after { right: 25px; }
+  @keyframes squish { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.13, .85) translateY(6px); } }
+  .bar { width: min(260px, 70vw); height: 8px; border-radius: 8px; background: rgba(255, 255, 255, .14); overflow: hidden; }
+  .bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #ff7aa8, #ffd36e); transition: width .15s; }
+  #pct { font-size: 13px; opacity: .7; font-variant-numeric: tabular-nums; }
+  #back {
+    position: fixed; z-index: 4; top: calc(12px + env(safe-area-inset-top, 0px)); left: calc(12px + env(safe-area-inset-left, 0px));
+    padding: 7px 12px; border-radius: 999px; background: rgba(20, 10, 22, .55); color: #ffe8f1; text-decoration: none;
+    font: 600 13px/1 system-ui, "Malgun Gothic", sans-serif; backdrop-filter: blur(6px);
+  }
+  #sdg { position: fixed; z-index: 4; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); left: calc(12px + env(safe-area-inset-left, 0px)); display: flex; gap: 4px; align-items: center;
+    padding: 5px 10px 5px 5px; border-radius: 999px; background: rgba(20, 10, 22, .55); color: #ffe8f1; font: 600 12px/1 system-ui, "Malgun Gothic", sans-serif; backdrop-filter: blur(6px); }
+  #sdg b { display: grid; place-items: center; min-width: 22px; height: 22px; border-radius: 6px; color: #fff; font: 800 11px/1 system-ui, sans-serif; }
+  #sdg span { margin-left: 4px; }
+  #quiz { position: fixed; z-index: 6; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(420px, calc(100vw - 32px)); padding: 20px; border-radius: 20px;
+    background: rgba(29, 18, 32, .94); color: #ffe8f1; border: 3px solid var(--g); box-shadow: 0 0 50px -10px var(--g); font: 600 16px/1.5 system-ui, "Malgun Gothic", "Apple SD Gothic Neo", sans-serif; text-align: center; }
+  #quiz .qn { width: 54px; height: 54px; margin: 0 auto; border-radius: 14px; display: grid; place-items: center; background: var(--g); color: #fff; font: 800 26px/1 system-ui, sans-serif; }
+  #quiz .qg { margin-top: 6px; font-size: 13px; opacity: .8; }
+  #quiz p { margin: 10px 0 14px; font-size: 18px; }
+  #quiz .qox { display: flex; gap: 10px; }
+  #quiz .qox button { flex: 1; padding: 14px; border-radius: 12px; border: 0; font: 800 26px/1 system-ui, sans-serif; cursor: pointer; }
+  #quiz .qox button[data-a="1"] { background: #3dffa8; color: #062016; } #quiz .qox button[data-a="0"] { background: #ff5f7a; color: #2a0610; }
+  #quiz .qox button:disabled { opacity: .55; }
+  #quiz .qfb { min-height: 1.4em; margin-top: 10px; font-size: 14px; }
+  #toast {
+    position: fixed; z-index: 4; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translate(-50%, 10px);
+    padding: 8px 14px; border-radius: 10px; background: rgba(20, 10, 22, .7); color: #ffe8f1; opacity: 0; transition: opacity .3s, transform .3s;
+    font: 600 13px/1.3 system-ui, "Malgun Gothic", sans-serif; white-space: nowrap;
+  }
+  #toast.on { opacity: 1; transform: translate(-50%, 0); }
+</style>
+</head>
+<body>
+<canvas id="c" tabindex="-1"></canvas>
+<div id="load">
+  <div class="blob"></div>
+  <div id="msg">말랑 스모 불러오는 중…</div>
+  <div class="bar"><i id="fill"></i></div>
+  <div id="pct">0%</div>
+</div>
+<a id="back" href="/sdg-worlds/">← 포털</a>
+<div id="sdg"><b style="background:#4C9F38">3</b><b style="background:#00689D">16</b><span>경기를 끝까지 하면 도장</span></div>
+<div id="toast"></div>
+<div id="quiz" hidden></div>
+<script src="/sdg-worlds/sdg/sdg.js"></script>
+<script>
+  var canvas = document.getElementById("c");
+  var buildUrl = "Build";
+  var loaderUrl = buildUrl + "/a7d9d6104db16f7b6f04362630503c5b.loader.js";
+  var config = {
+    arguments: [],
+    dataUrl: buildUrl + "/be9afffa834ef990ba27e770b7217e23.data.gz",
+    frameworkUrl: buildUrl + "/13f5abc2237555511645c598f655e879.framework.js.gz",
+    codeUrl: buildUrl + "/dfdfedace95e8056ddfbccf8a0256ccd.wasm.gz",
+    streamingAssetsUrl: "StreamingAssets",
+    companyName: "Mallang",
+    productName: "말랑 스모",
+    productVersion: "1.0",
+    // 폰에서는 해상도를 조금 낮춰 프레임을 지킨다
+    devicePixelRatio: Math.min(window.devicePixelRatio || 1, /Mobi|Android/i.test(navigator.userAgent) ? 1.25 : 1.5),
+    showBanner: function (msg, type) { if (type === "error") document.getElementById("msg").textContent = msg; }
+  };
+
+  // 경기가 끝나면 유니티가 부른다(Portal.jslib) → SDG 여권 도장: 3 건강(끝까지 몸을 움직임), 16 공정(심판·규칙을 지킨 경기)
+  // 퀴즈 스모(?mode=quiz): 판마다 유니티가 문제를 요청 → 화면 위 O/X 카드 → 답을 유니티로 돌려준다(정답이면 그 판 힘 UP)
+  var QUIZ = new URLSearchParams(location.search).get("mode") === "quiz";
+  var asked = [];
+  async function showQuiz() {
+    var data = await SDG.goals();
+    var pool = data.goals.filter(function (g) { return asked.indexOf(g.n) < 0; });
+    if (!pool.length) { asked = []; pool = data.goals; }
+    var g = pool[Math.floor(Math.random() * pool.length)]; asked.push(g.n);
+    var box = document.getElementById("quiz");
+    box.style.setProperty("--g", g.color);
+    box.innerHTML = '<div class="qn">' + g.n + '</div><div class="qg">SDG ' + g.n + ' · ' + g.name + '</div><p>' + g.quiz.q + '</p>' +
+      '<div class="qox"><button data-a="1">O</button><button data-a="0">X</button></div><div class="qfb"></div>';
+    box.hidden = false;
+    box.querySelectorAll("button").forEach(function (b) {
+      b.onclick = function () {
+        var ok = (b.dataset.a === "1") === g.quiz.a;
+        box.querySelector(".qfb").textContent = (ok ? "정답! 힘이 세져요. " : "아쉬워요. ") + g.quiz.why;
+        box.querySelectorAll("button").forEach(function (x) { x.disabled = true; });
+        if (ok) SDG.stamp(g.n, "sumo-quiz", "퀴즈 스모 정답! SDG " + g.n + " 도장");
+        setTimeout(function () { box.hidden = true; if (window.unityInstance) unityInstance.SendMessage("Portal", "QuizAnswer", ok ? "1" : "0"); canvas.focus(); }, ok ? 1500 : 2600);
+      };
+    });
+  }
+  window.portalEvent = function (e) {
+    if (e && e.type === "quiz" && window.SDG) { showQuiz(); return; }
+    if (!e || e.type !== "matchEnd" || !window.SDG) return;
+    var msg = e.won ? "멋진 승리! " : "끝까지 잘 싸웠어요! ";
+    SDG.stamp(3, "sumo", msg + "SDG 3 건강과 웰빙 도장").then(function () {
+      setTimeout(function () { SDG.stamp(16, "sumo", "규칙을 지킨 경기! SDG 16 평화·정의 도장"); }, 1800);
+    });
+  };
+
+  var fill = document.getElementById("fill"), pct = document.getElementById("pct");
+  var script = document.createElement("script");
+  script.src = loaderUrl;
+  script.onload = function () {
+    createUnityInstance(canvas, config, function (p) {
+      fill.style.width = Math.round(p * 100) + "%";
+      pct.textContent = Math.round(p * 100) + "%";
+    }).then(function (instance) {
+      window.unityInstance = instance;
+      if (QUIZ) {
+        instance.SendMessage("Portal", "SetQuizMode", "1");
+        document.querySelector("#sdg span").textContent = "퀴즈 스모: 판마다 SDG 퀴즈, 맞히면 힘 UP";
+      }
+      // 주소를 누른 순간부터 첫 화면까지 걸린 시간 — 포털이 이 값을 보여 준다
+      var sec = (performance.now() / 1000).toFixed(1);
+      try { localStorage.setItem("portal.load.sumo", sec); } catch (e) {}
+      document.getElementById("load").classList.add("done");
+      var t = document.getElementById("toast");
+      t.textContent = sec + "초 만에 입장 · 스페이스 또는 화면 터치로 조작";
+      t.classList.add("on");
+      setTimeout(function () { t.classList.remove("on"); }, 4200);
+      canvas.focus();
+    }).catch(function (m) {
+      document.getElementById("msg").textContent = "불러오지 못했어요: " + m;
+    });
+  };
+  var got = 0;
+  function inflate(url, type) {
+    return fetch(url).then(function (r) {
+      if (!r.ok) throw new Error(url + " " + r.status);
+      var count = new TransformStream({ transform: function (c, ctl) {
+        got += c.length; var p = Math.min(99, Math.round(got / 17889215 * 100));
+        if (typeof fill !== "undefined") fill.style.width = p + "%";
+        if (typeof pct !== "undefined") pct.textContent = p + "%";
+        ctl.enqueue(c);
+      } });
+      return new Response(r.body.pipeThrough(count).pipeThrough(new DecompressionStream("gzip")), { headers: { "Content-Type": type } }).blob();
+    }).then(function (b) { return URL.createObjectURL(b); });
+  }
+  config.cacheControl = function () { return "no-store"; };   // blob 주소는 매번 달라서 유니티 캐시에 쌓이기만 한다
+  Promise.all([inflate(config.dataUrl, "application/octet-stream"), inflate(config.frameworkUrl, "text/javascript"), inflate(config.codeUrl, "application/wasm")])
+    .then(function (u) { config.dataUrl = u[0]; config.frameworkUrl = u[1]; config.codeUrl = u[2]; document.body.appendChild(script); });
+</script>
+</body>
+</html>

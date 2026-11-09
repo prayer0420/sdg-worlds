@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>바다 청소 대작전</title>
+<style>
+  [hidden] { display: none !important; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #8fd3f4; color: #0c2a3a; font: 14px/1.4 system-ui, "Malgun Gothic", "Apple SD Gothic Neo", sans-serif; }
+  #stage { position: fixed; inset: 0; touch-action: none; }
+  #stage canvas { display: block; width: 100%; height: 100%; }
+  .chip { position: fixed; z-index: 3; padding: 8px 13px; border-radius: 999px; background: rgba(255, 255, 255, .82); backdrop-filter: blur(6px); font-weight: 700; text-decoration: none; color: inherit; box-shadow: 0 4px 14px rgba(0, 40, 60, .15); }
+  #back { top: calc(12px + env(safe-area-inset-top, 0px)); left: calc(12px + env(safe-area-inset-left, 0px)); }
+  #hud { top: calc(12px + env(safe-area-inset-top, 0px)); right: calc(12px + env(safe-area-inset-right, 0px)); display: flex; gap: 12px; font-variant-numeric: tabular-nums; }
+  #hud b { color: #0a7cc2; }
+  #hand { left: 50%; transform: translateX(-50%); top: calc(12px + env(safe-area-inset-top, 0px)); }
+  #msg { left: 50%; transform: translateX(-50%); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); max-width: min(92vw, 560px); text-align: center; border-radius: 16px; font-weight: 600; }
+  #intro, #result { position: fixed; inset: 0; z-index: 5; display: grid; place-items: center; background: rgba(8, 40, 60, .45); padding: 16px; }
+  .panel { width: min(440px, 100%); padding: 22px; border-radius: 20px; background: #fff; display: grid; gap: 10px; box-shadow: 0 20px 50px rgba(0, 30, 50, .3); }
+  .panel h1 { margin: 0; font-size: 24px; }
+  .panel p, .panel li { margin: 0; color: #3b5b6b; }
+  .panel ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
+  .chips { display: flex; gap: 4px; }
+  .chips b { min-width: 26px; height: 24px; border-radius: 6px; display: grid; place-items: center; color: #fff; font: 800 12px/1 system-ui, sans-serif; }
+  .bins { display: flex; gap: 6px; flex-wrap: wrap; }
+  .bins span { padding: 4px 10px; border-radius: 8px; color: #fff; font-weight: 700; font-size: 13px; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn { flex: 1; padding: 12px; border-radius: 12px; border: 0; font: inherit; font-weight: 800; font-size: 16px; cursor: pointer; background: #0a97d9; color: #fff; text-align: center; text-decoration: none; }
+  .btn.alt { background: #e8f3f8; color: #0c2a3a; }
+  .btn.vr { background: #19486A; }
+  .big { font-size: 40px; font-weight: 800; color: #0a7cc2; }
+</style>
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.min.js" } }
+</script>
+</head>
+<body>
+<div id="stage"></div>
+<a id="back" class="chip" href="/sdg-worlds/">← 포털</a>
+<div id="hud" class="chip"><span>점수 <b id="score">0</b></span><span>남은 시간 <b id="time">75</b></span></div>
+<div id="hand" class="chip" hidden></div>
+<div id="msg" class="chip">바다에 떠 있는 쓰레기를 눌러 건져 올리세요</div>
+<div id="intro">
+  <div class="panel">
+    <div class="chips"><b style="background:#0A97D9">14</b><b style="background:#BF8B2E">12</b></div>
+    <h1>바다 청소 대작전</h1>
+    <p>배 위에서 바다에 떠다니는 쓰레기를 건져 올려 맞는 통에 나눠 담아요. 물고기·거북이·해파리는 건드리지 마세요!</p>
+    <ul>
+      <li>쓰레기를 누르면 손에 들어요 → 맞는 통을 누르면 분리배출</li>
+      <li>바르게 담으면 +10점, 동물을 건드리면 −5점</li>
+      <li>75초 동안 50점이 넘으면 SDG 14, 다섯 번 이상 바르게 나누면 SDG 12 도장</li>
+    </ul>
+    <div class="bins"><span style="background:#2f7fd8">플라스틱</span><span style="background:#e3a50b">캔</span><span style="background:#8a63c9">비닐</span></div>
+    <div class="row"><button class="btn" id="start">시작</button><button class="btn vr" id="vr" hidden>VR로 시작</button></div>
+    <p id="xrNote" style="font-size:12px"></p>
+  </div>
+</div>
+<div id="result" hidden><div class="panel" id="resultBody"></div></div>
+<script src="/sdg-worlds/sdg/sdg.js"></script>
+<script type="module" src="ocean.js"></script>
+</body>
+</html>

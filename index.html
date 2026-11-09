@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SDG 월드 포털</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.min.js" crossorigin>
+<style>
+  :root { --bg: #07060f; --panel: #110e1f; --line: rgba(255, 255, 255, .09); --fg: #f2ecff; --sub: #a99fc4; --pink: #ff5fa2; --cyan: #2ee6ff; --gold: #ffd23f; --violet: #9b5cff; color-scheme: dark; }
+  * { box-sizing: border-box; }
+  html { background: var(--bg); }
+  body { margin: 0; color: var(--fg); font: 15px/1.55 system-ui, "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+    background: radial-gradient(900px 500px at 15% -10%, rgba(255, 95, 162, .16), transparent 60%), radial-gradient(800px 500px at 100% 0%, rgba(46, 230, 255, .13), transparent 60%), var(--bg); min-height: 100vh; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding-block: 28px 48px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 22px; }
+  header { display: grid; gap: 6px; }
+  .eyebrow { font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--cyan); font-weight: 700; }
+  h1 { margin: 0; font-size: clamp(30px, 6vw, 48px); line-height: 1.1; text-wrap: balance; }
+  h1 span { color: var(--pink); text-shadow: 0 0 22px rgba(255, 95, 162, .6); }
+  .lead { margin: 0; color: var(--sub); max-width: 62ch; }
+  .device { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 12px 14px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); font-size: 13px; }
+  .tag { padding: 3px 9px; border-radius: 999px; border: 1px solid var(--line); color: var(--sub); }
+  .tag.ok { color: #7dffc4; border-color: rgba(125, 255, 196, .35); }
+  .tag.no { opacity: .6; }
+  .rec { margin-left: auto; font-weight: 700; color: var(--gold); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+  .card { position: relative; display: grid; grid-template-rows: auto auto 1fr auto; gap: 8px; padding: 18px; border-radius: 18px; background: var(--panel); border: 1px solid var(--line); overflow: hidden; min-width: 0; transition: transform .15s, border-color .15s; }
+  .card::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 3px; background: var(--c); box-shadow: 0 0 18px var(--c); }
+  .card:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--c) 45%, transparent); }
+  .card.recommended { border-color: color-mix(in srgb, var(--c) 60%, transparent); box-shadow: 0 0 0 1px color-mix(in srgb, var(--c) 30%, transparent), 0 10px 40px -18px var(--c); }
+  .kind { font-size: 12px; font-weight: 700; color: var(--c); letter-spacing: .04em; }
+  .card h2 { margin: 0; font-size: 22px; }
+  .card p { margin: 0; color: var(--sub); font-size: 14px; }
+  .meta { display: flex; flex-wrap: wrap; gap: 6px; font-size: 12px; color: var(--sub); }
+  .meta b { color: var(--fg); font-weight: 650; }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+  .go { flex: 1 1 auto; text-align: center; padding: 11px 14px; border-radius: 12px; background: var(--c); color: #07060f; font-weight: 800; text-decoration: none; }
+  .alt { padding: 11px 12px; border-radius: 12px; border: 1px solid var(--line); color: var(--fg); text-decoration: none; font-weight: 650; font-size: 13px; }
+  .status { font-size: 12px; font-weight: 700; }
+  .status.up { color: #7dffc4; } .status.down { color: #ff8a9a; } .status.wait { color: var(--gold); }
+  section.more { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
+  .box { padding: 18px; border-radius: 18px; border: 1px solid var(--line); background: var(--panel); min-width: 0; display: grid; gap: 10px; align-content: start; }
+  .box h3 { margin: 0; font-size: 16px; }
+  .box p, .box li { color: var(--sub); font-size: 13.5px; margin: 0; }
+  .box ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
+  #qr { width: 148px; height: 148px; padding: 8px; background: #fff; border-radius: 12px; }
+  .qrrow { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+  code { font: 12.5px/1.4 ui-monospace, Consolas, monospace; color: var(--cyan); word-break: break-all; }
+  footer { color: var(--sub); font-size: 12px; }
+  .box a { color: var(--gold); }
+  /* SDG 여권 띠 */
+  .passport { display: grid; gap: 12px; padding: 16px; border-radius: 18px; background: linear-gradient(135deg, rgba(255, 210, 63, .1), rgba(155, 92, 255, .08)); border: 1px solid rgba(255, 210, 63, .25); }
+  .pp-head { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
+  .pp-who { font-weight: 800; font-size: 17px; }
+  .pp-sub { color: var(--sub); font-size: 13px; }
+  .pp-btns { display: flex; gap: 8px; align-items: center; }
+  .go.small { --c: var(--gold); flex: none; padding: 9px 14px; border: 0; font: inherit; font-weight: 800; cursor: pointer; }
+  .pp-strip { display: grid; grid-template-columns: repeat(17, minmax(0, 1fr)); gap: 4px; }
+  .pp-strip span { aspect-ratio: 1; border-radius: 6px; display: grid; place-items: center; font: 800 12px/1 system-ui, sans-serif; color: rgba(255, 255, 255, .55); background: rgba(255, 255, 255, .06); border: 1px dashed rgba(255, 255, 255, .18); }
+  .pp-strip span.on { color: #fff; border: 0; background: var(--g); box-shadow: 0 0 12px color-mix(in srgb, var(--g) 55%, transparent); }
+  @media (max-width: 560px) { .pp-strip { grid-template-columns: repeat(9, minmax(0, 1fr)); } }
+  .goals { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
+  .goals i { font-style: normal; min-width: 24px; height: 22px; padding: 0 6px; border-radius: 6px; display: inline-grid; place-items: center; font: 800 11.5px/1 system-ui, sans-serif; color: #fff; background: var(--g); opacity: .55; }
+  .goals i.on { opacity: 1; outline: 2px solid #fff; outline-offset: -2px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">SDG World · 메타버스 학습 시제품</div>
+    <h1>누르면 바로, <span>SDG 세계로</span></h1>
+    <p class="lead">지속가능발전목표(SDG) 17개를 게임·VR·AR 공간에서 직접 걸으며 배워요. 웹에서 한 번 누르면 유니티 게임, 언리얼 오픈월드, VR·AR 공간으로 바로 들어가고, 배운 목표마다 여권에 도장이 찍혀요.</p>
+  </header>
+
+  <section class="passport" id="passport">
+    <div class="pp-head">
+      <div><div class="pp-who" id="ppWho">SDG 여권이 아직 없어요</div><div class="pp-sub" id="ppSub">공간을 돌며 17개 목표 도장을 모아 보세요</div></div>
+      <div class="pp-btns"><a class="alt" href="/sdg-worlds/passport/">여권 보기</a><button class="go small" id="ppJoin" type="button">여권 만들기</button></div>
+    </div>
+    <div class="pp-strip" id="ppStrip"></div>
+  </section>
+
+  <a class="worldsMap" href="/sdg-worlds/worlds/">
+    <span class="wm-bands"><i style="background:#ffd6e8;color:#2b2d42">초1~2<br><b>장난감 나라</b></i><i style="background:#fbf1dc;color:#3b2a1a">초3~4<br><b>동화 마을</b></i><i style="background:#221f4a;color:#f3ecff">초5~6<br><b>판타지 왕국</b></i></span>
+    <span class="wm-t"><b>🗺️ SDG 세계 지도 · 세계 51개</b>
+      <span>SDG 17개 목표마다 학년에 맞는 3D 세계. 초1~2·초3~4는 유니티, 초5~6은 언리얼로 만든 세계에서 이야기를 보고, 걷고, 문제를 해결하며 영어 낱말을 배워요.</span></span>
+    <span class="bg-go">들어가기 →</span>
+  </a>
+  <style>
+    .worldsMap { display: grid; grid-template-columns: auto 1fr auto; gap: 14px; align-items: center; margin: 0 0 14px; padding: 12px; border-radius: 18px; text-decoration: none; color: #fff; background: linear-gradient(110deg, #5a3fb0, #c2477a 55%, #f0a24a); box-shadow: 0 5px 0 #2a1b55; }
+    .worldsMap .wm-bands { display: flex; gap: 6px; }
+    .worldsMap .wm-bands i { font-style: normal; font-size: 12px; line-height: 1.25; text-align: center; padding: 8px 10px; border-radius: 12px; }
+    .worldsMap .wm-t { display: grid; gap: 3px; min-width: 0; }
+    .worldsMap .wm-t b { font-size: 18px; }
+    .worldsMap .wm-t span { font-size: 14px; opacity: .92; }
+    .worldsMap .bg-go { font-weight: 800; background: #fff; color: #5a3fb0; border-radius: 999px; padding: 8px 14px; white-space: nowrap; }
+    @media (max-width: 640px) { .worldsMap { grid-template-columns: 1fr; } }
+  </style>
+  
+
+  <div class="device" id="device"><span>이 기기 확인 중…</span></div>
+
+  <div class="grid">
+    <article class="card" style="--c: var(--violet)" data-id="lobby">
+      <div class="kind">WEB 3D · WebXR</div>
+      <h2>네온 로비</h2>
+      <p>17개 SDG 기둥이 둘러선 광장. 기둥을 눌러 목표를 읽고 O/X 퀴즈를 맞히면 도장! 퀘스트에서는 VR로, 안드로이드에서는 AR 디오라마로 들어가요.</p>
+      <div>
+        <div class="goals" data-goals="all"></div>
+        <div class="meta"><span>three.js</span><span>·</span><span>지난 입장 <b data-load="lobby">—</b></span></div>
+        <div class="actions"><a class="go" href="/sdg-worlds/lobby/">로비 입장</a><a class="alt" href="/sdg-worlds/ocean/" title="SDG 14·12 분리배출 게임(VR 가능)">🌊 바다 청소</a></div>
+      </div>
+    </article>
+    <article class="card" style="--c: var(--pink)" data-id="sumo">
+      <div class="kind">UNITY · 웹 빌드</div>
+      <h2>말랑 스모</h2>
+      <p>유니티 게임을 브라우저에서 바로. 몸을 움직이는 즐거움(건강)과 심판·규칙을 지키는 공정한 경기(평화·정의)를 배워요.</p>
+      <div>
+        <div class="goals" data-goals="sumo"></div>
+        <div class="meta"><span class="status up">준비됨</span><span>·</span><span>지난 입장 <b data-load="sumo">—</b></span></div>
+        <div class="actions"><a class="go" href="/sdg-worlds/sumo/">웹으로 하기</a><a class="alt" href="/sdg-worlds/sumo/?mode=quiz" title="판마다 SDG 퀴즈, 맞히면 힘 UP">❓ 퀴즈 스모</a><a class="alt" href="mallangsumo://open" title="PC에 설치된 앱을 엽니다">앱으로</a></div>
+      </div>
+    </article>
+    <article class="card" style="--c: var(--cyan)" data-id="neon">
+      <div class="kind">UNREAL · 픽셀 스트리밍</div>
+      <h2>네온 바람골</h2>
+      <p>꺼져 가는 미래 도시를 지키는 SDG 조각 7개를 찾아요. 풍력 언덕·거울호수·속삭임 숲마다 다른 목표가 숨어 있어요. 언리얼 화면을 영상으로 받아 폰에서도 고화질.</p>
+      <div>
+        <div class="goals" data-goals="neon"></div>
+        <div class="meta"><span class="status down">수업 시간에만</span><span>·</span><span>지난 입장 <b data-load="neon">—</b></span></div>
+        <div class="actions"><a class="go" href="/sdg-worlds/neon/">스트리밍 입장</a><a class="alt" href="/sdg-worlds/tour/" title="선생님이 안내하는 투어를 보며 폰으로 답하기">🎥 라이브 투어</a><a class="alt" href="neonbaramgol://open" title="PC에 설치된 앱을 엽니다">앱으로</a></div>
+      </div>
+    </article>
+    <article class="card" style="--c: var(--gold)" data-id="ar">
+      <div class="kind">AR · 폰 카메라</div>
+      <h2>AR 나무 심기</h2>
+      <p>말랑이와 함께 내 방에 어린나무를 심어 봐요. 숲이 왜 소중한지 퀴즈로 확인해요. 안드로이드는 WebXR·Scene Viewer, 아이폰은 Quick Look으로 열려요.</p>
+      <div>
+        <div class="goals" data-goals="ar"></div>
+        <div class="meta"><span>model-viewer</span><span>·</span><span>지난 입장 <b data-load="ar">—</b></span></div>
+        <div class="actions"><a class="go" href="/sdg-worlds/ar/">AR로 보기</a><a class="alt" href="/sdg-worlds/ar/water/" title="물건의 물발자국을 어림하고 실제 크기 물 상자로 보기">💧 물발자국</a></div>
+      </div>
+    </article>
+  </div>
+
+  <section class="more">
+    <div class="box">
+      <h3>선생님·보호자</h3>
+      <p>반 코드를 정해 학생들에게 알려 주면, 학생이 별명으로 여권을 만들어 도장을 모아요. 실제 이름은 받지 않아요.</p>
+      <ul>
+        <li><a href="/sdg-worlds/teacher/">반 현황 보기</a> — 학생별 17개 목표 도장과 목표별 달성 수</li>
+        <li><a href="/sdg-worlds/passport/">여권 보기</a> — 아이가 모은 도장과 배운 목표를 보호자와 함께 봐요</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h3>폰·퀘스트로 열기</h3>
+      <div class="qrrow">
+        <div id="qr" aria-label="같은 와이파이 주소 QR"></div>
+        <div style="display:grid;gap:6px;min-width:0">
+          <p>폰으로 찍으면 어디서든 이 포털이 열려요.</p>
+          <code>https://prayer0420.github.io/sdg-worlds/</code>
+          <p>VR·AR 입장은 https 주소가 필요해요:</p>
+          <code>https://prayer0420.github.io/sdg-worlds/</code>
+        </div>
+      </div>
+    </div>
+    <div class="box">
+      <h3>빨리 열리게 한 것들</h3>
+      <ul>
+        <li>로비는 몇 MB짜리 웹 3D라 먼저 뜨고, 그동안 유니티 빌드를 몰래 미리 받아요.</li>
+        <li>유니티 파일은 이름에 해시를 붙여 1년 동안 캐시하고, gzip 압축을 서버가 그대로 내려줘요.</li>
+        <li>언리얼은 미리 켜 둔 게임에 붙기만 해서, 누르면 1~3초 안에 화면이 와요.</li>
+        <li>PC에 앱이 깔려 있으면 <code>mallangsumo://</code> 같은 주소로 앱이 바로 열려요.</li>
+      </ul>
+    </div>
+  </section>
+  <footer>SDG 월드 포털</footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="/sdg-worlds/sdg/sdg.js"></script>
+<script>
+  // SDG 여권 띠와 카드별 목표 칩
+  async function drawPassport() {
+    const { goals, spaces } = await SDG.goals();
+    const pp = await SDG.passport();
+    const stamps = (pp && pp.stamps) || {};
+    const n = Object.keys(stamps).length;
+    document.getElementById('ppWho').textContent = pp ? `${pp.nick}의 SDG 여권 · ${n} / 17` : 'SDG 여권이 아직 없어요';
+    document.getElementById('ppSub').textContent = pp ? `반 ${pp.cls} · ${n === 17 ? '17개 목표를 모두 모았어요!' : '빈 칸은 아직 만나지 못한 목표예요'}` : '반 코드와 별명으로 여권을 만들고 17개 목표 도장을 모아 보세요';
+    document.getElementById('ppJoin').textContent = pp ? '여권 바꾸기' : '여권 만들기';
+    document.getElementById('ppStrip').innerHTML = goals.map((g) => `<span class="${stamps[g.n] ? 'on' : ''}" style="--g:${g.color}" title="SDG ${g.n} · ${g.name}">${g.n}</span>`).join('');
+    for (const el of document.querySelectorAll('[data-goals]')) {
+      const list = el.dataset.goals === 'all' ? goals.map((g) => g.n) : spaces[el.dataset.goals].goals;
+      el.innerHTML = list.map((k) => `<i class="${stamps[k] ? 'on' : ''}" style="--g:${goals[k - 1].color}" title="SDG ${k} · ${goals[k - 1].name}">${k}</i>`).join('');
+    }
+  }
+  document.getElementById('ppJoin').onclick = () => SDG.join();
+  addEventListener('sdg:passport', drawPassport);
+  drawPassport();
+</script>
+<script>
+  const $ = (s) => document.querySelector(s);
+  // 지난 입장 시간(각 페이지가 첫 화면을 그린 순간 기록)
+  for (const el of document.querySelectorAll('[data-load]')) {
+    let v = null; try { v = localStorage.getItem('portal.load.' + el.dataset.load); } catch (e) {}
+    if (v) el.textContent = v + '초';
+  }
+
+  // 기기 알아보기 → 추천 길
+  (async () => {
+    const ua = navigator.userAgent;
+    const quest = /OculusBrowser|Quest/i.test(ua);
+    const ios = /iPhone|iPad|iPod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const android = /Android/i.test(ua);
+    const mobile = ios || android;
+    let vr = false, ar = false;
+    if (navigator.xr) {
+      [vr, ar] = await Promise.all(['immersive-vr', 'immersive-ar'].map((m) => navigator.xr.isSessionSupported(m).catch(() => false)));
+    }
+    const name = quest ? '퀘스트' : ios ? '아이폰·아이패드' : android ? '안드로이드' : 'PC';
+    let rec = 'sumo', why = '웹으로 바로 실행';
+    if (vr) { rec = 'lobby'; why = 'VR로 로비 입장'; }
+    else if (ar || ios) { rec = 'ar'; why = 'AR로 말랑이 보기'; }
+    else if (mobile) { rec = 'neon'; why = '폰은 스트리밍이 가장 고화질'; }
+    const tag = (ok, t) => `<span class="tag ${ok ? 'ok' : 'no'}">${t}</span>`;
+    $('#device').innerHTML = `<b>이 기기: ${name}</b>` + tag(true, 'WebGL') + tag(vr, 'VR') + tag(ar || ios, ios ? 'AR(Quick Look)' : 'AR') + tag(window.isSecureContext, 'https') +
+      `<span class="rec">추천 → ${document.querySelector(`[data-id="${rec}"] h2`).textContent} · ${why}</span>`;
+    document.querySelector(`[data-id="${rec}"]`).classList.add('recommended');
+    // PC 앱 바로가기는 PC에서만 의미가 있다
+    if (mobile || quest) for (const a of document.querySelectorAll('a.alt[href*="://"]')) a.hidden = true;
+  })();
+
+  // 서버 상태 + 폰 QR
+  async function refresh() {
+    let s; try { s = await fetch('/api/status', { cache: 'no-store' }).then((r) => r.json()); } catch { return; }
+    const sumo = $('[data-status="sumo"]');
+    sumo.textContent = s.sumo.built ? '준비됨' : '빌드 없음'; sumo.className = 'status ' + (s.sumo.built ? 'up' : 'down');
+    const neon = $('[data-status="neon"]');
+    const ready = s.neon.signalling && (!s.neon.streamers || s.neon.streamers.length > 0);
+    neon.textContent = !s.neon.installed ? '서버 설치 필요' : !s.neon.signalling ? '서버 꺼짐' : ready ? '게임 대기 중' : '게임 켜는 중';
+    neon.className = 'status ' + (!s.neon.signalling ? 'down' : ready ? 'up' : 'wait');
+    const ip = s.lan[0];
+    $('#srv').textContent = location.origin;
+    if (!$('#qr').dataset.done) {
+      // 인터넷 주소로 들어오면 서버가 집 안 주소를 주지 않으므로, 지금 주소를 그대로 보여 준다
+      const url = ip ? `http://${ip}:${s.httpPort}/` : location.origin + '/';
+      $('#lanUrl').textContent = url;
+      $('#lanHttps').textContent = ip ? `https://${ip}:${s.httpsPort}/` : location.origin + '/';
+      if (!ip) $('#qrHint').textContent = '폰으로 찍으면 어디서든 이 포털이 열려요.';
+      if (window.QRCode) { new QRCode($('#qr'), { text: url, width: 132, height: 132, correctLevel: QRCode.CorrectLevel.M }); $('#qr').dataset.done = 1; }
+    }
+  }
+  refresh(); setInterval(refresh, 4000);
+
+  // 말랑 스모 카드에 손을 올리면 빌드 파일을 미리 받아 둔다(해시 파일명이라 브라우저가 오래 보관)
+  let pre = false;
+  async function prefetch() {
+    if (pre || (navigator.connection && navigator.connection.saveData)) return; pre = true;
+    const list = await fetch('/api/prefetch/sumo').then((r) => r.json()).catch(() => []);
+    for (const u of list) await fetch(u, { priority: 'low' }).then((r) => r.arrayBuffer()).catch(() => {});
+  }
+  const sumoCard = document.querySelector('[data-id="sumo"]');
+  sumoCard.addEventListener('pointerenter', prefetch);
+  sumoCard.addEventListener('touchstart', prefetch, { passive: true });
+</script>
+<script>addEventListener('load', () => { const q = document.getElementById('qr'); if (window.QRCode && !q.dataset.done) { new QRCode(q, { text: "https://prayer0420.github.io/sdg-worlds/", width: 132, height: 132, correctLevel: QRCode.CorrectLevel.M }); q.dataset.done = 1; } });</script>
+</body>
+</html>

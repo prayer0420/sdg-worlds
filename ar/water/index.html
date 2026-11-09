@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>물발자국 어림 게임</title>
+<script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer@3.5.0/dist/model-viewer.min.js"></script>
+<style>
+  :root { --bg: #eef8fd; --fg: #0d2a3b; --sub: #557081; --accent: #0a97d9; --card: #fff; --line: #d6eaf4; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #0a1820; --fg: #e3f4fc; --sub: #92b2c3; --accent: #3bb7f0; --card: #11232d; --line: rgba(255,255,255,.1); } }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.5 system-ui, "Malgun Gothic", "Apple SD Gothic Neo", sans-serif; }
+  .wrap { max-width: 920px; margin: 0 auto; display: grid; gap: 12px; padding-block: max(12px, env(safe-area-inset-top, 0px)) 28px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  header { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  header a { color: var(--fg); text-decoration: none; font-weight: 700; padding: 6px 12px; border-radius: 999px; background: var(--card); border: 1px solid var(--line); }
+  header h1 { margin: 0; font-size: 20px; }
+  .chips { display: flex; gap: 4px; margin-left: auto; } .chips b { min-width: 26px; height: 24px; border-radius: 6px; display: grid; place-items: center; color: #fff; font: 800 12px/1 system-ui, sans-serif; }
+  .card { padding: 18px; border-radius: 18px; background: var(--card); border: 1px solid var(--line); display: grid; gap: 12px; }
+  .item { display: flex; gap: 14px; align-items: center; }
+  .emoji { font-size: 54px; line-height: 1; }
+  .item h2 { margin: 0; font-size: 22px; } .item p { margin: 2px 0 0; color: var(--sub); }
+  .opts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .opts button { padding: 14px 8px; border-radius: 12px; border: 2px solid var(--line); background: var(--bg); color: var(--fg); font: 800 18px/1.2 system-ui, sans-serif; cursor: pointer; }
+  .opts button.ok { border-color: #22c55e; background: rgba(34, 197, 94, .18); } .opts button.no { border-color: #ef4444; opacity: .7; }
+  .stage { position: relative; height: min(52vh, 460px); border-radius: 16px; overflow: hidden; background: linear-gradient(#dff2fb, #f7fcff); border: 1px solid var(--line); }
+  @media (prefers-color-scheme: dark) { .stage { background: linear-gradient(#0f2733, #0a1820); } }
+  model-viewer { width: 100%; height: 100%; --poster-color: transparent; }
+  .arbtn { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); border: 0; border-radius: 999px; padding: 11px 20px; font: 700 15px/1 inherit; font-family: inherit; color: #fff; background: var(--accent); cursor: pointer; white-space: nowrap; }
+  .reveal { font-size: 15px; } .reveal b { color: var(--accent); font-size: 20px; }
+  .row { display: flex; gap: 8px; justify-content: space-between; align-items: center; flex-wrap: wrap; }
+  .next { padding: 11px 18px; border-radius: 12px; border: 0; background: var(--accent); color: #fff; font: inherit; font-weight: 800; cursor: pointer; }
+  .prog { color: var(--sub); font-weight: 700; }
+  .note { color: var(--sub); font-size: 12.5px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><a href="/sdg-worlds/">← 포털</a><h1>물발자국 어림 게임</h1><div class="chips"><b style="background:#26BDE2">6</b><b style="background:#BF8B2E">12</b></div></header>
+  <section class="card" id="game"></section>
+  <div class="stage" id="stage" hidden>
+    <model-viewer id="mv" ar ar-modes="webxr scene-viewer quick-look" ar-placement="floor" camera-controls shadow-intensity="1" environment-image="neutral" exposure="1.05" alt="물건을 만드는 데 드는 물의 양을 실제 크기 물 상자로 보여 줍니다">
+      <button slot="ar-button" class="arbtn">이 물을 내 방에 놓아 보기</button>
+    </model-viewer>
+  </div>
+  <p class="note">물발자국: 물건을 만들고 기르는 데 들어간 물을 모두 더한 양이에요. 숫자는 Water Footprint Network에서 널리 인용하는 평균값이라 나라·만드는 방법에 따라 달라요. 물 상자는 실제 크기(1,000L = 1m×1m×1m)이고, 옆의 말랑이는 키 42cm예요.</p>
+</div>
+<script src="/sdg-worlds/sdg/sdg.js"></script>
+<script>
+  const ITEMS = [
+    { id: 'paper', emoji: '📄', name: 'A4 종이 한 장', litres: 10, tip: '종이는 나무로 만들고, 나무를 키우고 펄프를 만드는 데 물이 들어요.' },
+    { id: 'apple', emoji: '🍎', name: '사과 한 개', litres: 125, tip: '사과나무가 자라고 열매를 맺는 동안 빗물과 강물을 많이 마셔요.' },
+    { id: 'milk', emoji: '🥛', name: '우유 한 컵(250mL)', litres: 255, tip: '젖소가 마시는 물과 먹는 사료를 키우는 물까지 더한 양이에요.' },
+    { id: 'choco', emoji: '🍫', name: '초콜릿 100g', litres: 1700, tip: '카카오와 설탕을 기르는 데 물이 아주 많이 들어요.' },
+    { id: 'burger', emoji: '🍔', name: '햄버거 한 개', litres: 2400, tip: '소고기는 소가 먹을 곡식을 키우는 물이 커서 물발자국이 커요.' },
+    { id: 'tshirt', emoji: '👕', name: '면 티셔츠 한 장', litres: 2700, tip: '목화를 키우는 데 물이 많이 들어요. 옷을 오래 입으면 물을 아껴요!' },
+  ];
+  const fmt = (n) => n.toLocaleString('ko-KR') + 'L';
+  let order = [], idx = 0, right = 0;
+  function start() {
+    order = [...ITEMS].sort(() => Math.random() - 0.5).slice(0, 5); idx = 0; right = 0; draw();
+  }
+  function choices(it) {
+    const others = ITEMS.filter((x) => Math.abs(Math.log10(x.litres) - Math.log10(it.litres)) > 0.3).map((x) => x.litres);
+    const pick = others.sort(() => Math.random() - 0.5).slice(0, 2);
+    return [it.litres, ...pick].sort((a, b) => a - b);
+  }
+  function draw() {
+    const g = document.getElementById('game');
+    document.getElementById('stage').hidden = true;
+    if (idx >= order.length) return end();
+    const it = order[idx];
+    g.innerHTML = `<div class="row"><span class="prog">${idx + 1} / ${order.length}</span><span class="prog">맞힌 개수 ${right}</span></div>
+      <div class="item"><div class="emoji">${it.emoji}</div><div><h2>${it.name}</h2><p>이것을 만드는 데 물이 얼마나 들까요? 어림해 보세요!</p></div></div>
+      <div class="opts">${choices(it).map((v) => `<button data-v="${v}">${fmt(v)}</button>`).join('')}</div><div id="rev"></div>`;
+    for (const b of g.querySelectorAll('.opts button')) b.onclick = () => answer(it, Number(b.dataset.v));
+  }
+  function answer(it, v) {
+    const ok = v === it.litres; if (ok) right++;
+    for (const b of document.querySelectorAll('.opts button')) { b.disabled = true; const bv = Number(b.dataset.v); b.className = bv === it.litres ? 'ok' : bv === v ? 'no' : ''; }
+    const bottles = Math.round(it.litres / 2), side = Math.cbrt(it.litres / 1000);
+    document.getElementById('rev').innerHTML = `<div class="reveal">${ok ? '정답! ' : '앗, '}${it.name}의 물발자국은 약 <b>${fmt(it.litres)}</b>예요. 2L 생수병 <b>${bottles.toLocaleString('ko-KR')}</b>병, 한 변이 <b>${side.toFixed(2)}m</b>인 물 상자만큼이에요.</div>
+      <p class="note" style="margin:0">${it.tip}</p><div class="row"><span></span><button class="next" id="next">${idx + 1 < order.length ? '다음 물건' : '결과 보기'}</button></div>`;
+    const mv = document.getElementById('mv'); mv.src = `${it.id}.glb`; mv.cameraOrbit = `25deg 72deg ${Math.max(1.6, side * 3.2)}m`;
+    document.getElementById('stage').hidden = false;
+    document.getElementById('next').onclick = () => { idx++; draw(); scrollTo({ top: 0, behavior: 'smooth' }); };
+  }
+  async function end() {
+    const g = document.getElementById('game');
+    const sorted = [...ITEMS].sort((a, b) => b.litres - a.litres);
+    g.innerHTML = `<h2 style="margin:0">${order.length}개 중 ${right}개를 맞혔어요!</h2>
+      <p style="margin:0">물을 많이 쓰는 순서: ${sorted.map((x) => `${x.emoji} ${x.name.split(' ')[0]} ${fmt(x.litres)}`).join(' › ')}</p>
+      <p class="note" style="margin:0">우리가 할 수 있는 일: 음식 남기지 않기, 옷 오래 입기, 종이 양면 쓰기 — 눈에 안 보이는 물까지 아끼는 방법이에요.</p>
+      <p style="margin:0">${right >= 3 ? '✅ SDG 6 깨끗한 물 도장' : '⬜ 3개 이상 맞히면 SDG 6 도장'} · ${right >= 4 ? '✅ SDG 12 책임 있는 소비 도장' : '⬜ 4개 이상 맞히면 SDG 12 도장'}</p>
+      <div class="row"><button class="next" id="again">다시 하기</button><a href="/sdg-worlds/passport/" style="color:var(--accent);font-weight:700">여권 보기</a></div>`;
+    document.getElementById('again').onclick = start;
+    if (right >= 3) await SDG.stamp(6, 'water', '물발자국 박사! SDG 6 도장');
+    if (right >= 4) setTimeout(() => SDG.stamp(12, 'water', '보이지 않는 물까지 아끼기! SDG 12 도장'), 1500);
+  }
+  start();
+</script>
+</body>
+</html>

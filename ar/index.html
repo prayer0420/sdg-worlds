@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AR 나무 심기</title>
+<script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer@3.5.0/dist/model-viewer.min.js"></script>
+<style>
+  :root { --bg: #f3faf1; --fg: #1f3320; --sub: #5d745c; --accent: #3f9b2f; --card: #ffffff; --line: #dcebd7; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #0f1a12; --fg: #e6f5e3; --sub: #9bb79a; --accent: #6fd35a; --card: #18261b; --line: rgba(255,255,255,.1); } }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--fg); font: 15px/1.5 system-ui, "Malgun Gothic", "Apple SD Gothic Neo", sans-serif; }
+  .wrap { display: grid; gap: 12px; max-width: 980px; margin: 0 auto; padding-block: max(12px, env(safe-area-inset-top, 0px)) 24px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  header { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  header a { color: var(--fg); text-decoration: none; font-weight: 700; padding: 6px 12px; border-radius: 999px; background: var(--card); border: 1px solid var(--line); }
+  header h1 { font-size: 20px; margin: 0; }
+  .chips { display: flex; gap: 4px; margin-left: auto; }
+  .chips b { min-width: 26px; height: 24px; border-radius: 6px; display: grid; place-items: center; color: #fff; font: 800 12px/1 system-ui, sans-serif; }
+  .tabs { display: flex; gap: 6px; }
+  .tabs button { flex: 1; padding: 9px; border-radius: 10px; border: 1px solid var(--line); background: var(--card); color: var(--fg); font: inherit; font-weight: 700; cursor: pointer; }
+  .tabs button.on { background: var(--accent); color: #fff; border-color: transparent; }
+  .stage { position: relative; height: min(58vh, 520px); border-radius: 18px; overflow: hidden; background: radial-gradient(ellipse at 50% 75%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 70%), var(--card); border: 1px solid var(--line); }
+  model-viewer { width: 100%; height: 100%; --poster-color: transparent; }
+  .arbtn { position: absolute; left: 50%; bottom: 16px; transform: translateX(-50%); border: 0; border-radius: 999px; padding: 12px 22px; font: 700 16px/1 inherit; font-family: inherit; color: #fff; background: var(--accent); box-shadow: 0 6px 20px rgba(63, 155, 47, .4); cursor: pointer; white-space: nowrap; }
+  .panel { display: grid; gap: 10px; padding: 16px; border-radius: 16px; background: var(--card); border: 1px solid var(--line); }
+  .panel h2 { margin: 0; font-size: 17px; }
+  .panel p { margin: 0; color: var(--sub); font-size: 14px; }
+  .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px; }
+  .fact { padding: 10px 12px; border-radius: 12px; background: color-mix(in srgb, var(--accent) 10%, transparent); font-size: 13.5px; }
+  .ox { display: flex; gap: 8px; }
+  .ox button { flex: 1; padding: 11px; border-radius: 10px; border: 0; font: 800 20px/1 system-ui, sans-serif; cursor: pointer; }
+  .ox .o { background: #3dffa8; color: #062016; } .ox .x { background: #ff5f7a; color: #2a0610; }
+  .fb { min-height: 1.3em; font-weight: 650; }
+  .note { color: var(--sub); font-size: 12.5px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><a href="/sdg-worlds/">← 포털</a><h1>AR 나무 심기</h1><div class="chips"><b style="background:#56C02B">15</b><b style="background:#3F7E44">13</b></div></header>
+  <div class="tabs"><button data-src="mallang_tree.glb" class="on">나무 심는 말랑이</button><button data-src="mallang.glb">스모 말랑이</button></div>
+  <div class="stage">
+    <model-viewer id="mv" src="mallang_tree.glb" alt="화분에 심은 어린나무 옆의 분홍 말랑이" ar ar-modes="webxr scene-viewer quick-look" ar-placement="floor"
+      camera-controls auto-rotate rotation-per-second="20deg" shadow-intensity="1.1" shadow-softness="0.8" exposure="1.05" environment-image="neutral"
+      camera-orbit="20deg 75deg 1.5m" field-of-view="30deg" touch-action="pan-y">
+      <button slot="ar-button" class="arbtn">내 방에 나무 심기</button>
+    </model-viewer>
+  </div>
+  <section class="panel">
+    <h2>나무 한 그루가 하는 일</h2>
+    <div class="facts">
+      <div class="fact">🌳 숲은 땅 위 생물 대부분의 집이에요. 숲이 사라지면 동물도 살 곳을 잃어요. (SDG 15)</div>
+      <div class="fact">🌬️ 나무는 이산화탄소를 빨아들여 몸에 저장해요. 그래서 숲을 지키면 기후 변화를 늦추는 데 도움이 돼요. (SDG 13)</div>
+      <div class="fact">💧 나무뿌리는 흙을 붙잡아 비가 많이 와도 산사태와 홍수를 줄여 줘요.</div>
+    </div>
+  </section>
+  <section class="panel" id="quiz"></section>
+  <p class="note">폰(안드로이드 크롬, 아이폰 사파리)에서 열면 카메라 화면 바닥에 실제 크기로 심을 수 있어요. AR로 심으면 SDG 15 도장, 퀴즈를 맞히면 SDG 13 도장. PC에서는 돌려 보기와 퀴즈만 돼요. <span id="load"></span></p>
+</div>
+<script src="/sdg-worlds/sdg/sdg.js"></script>
+<script>
+  const mv = document.getElementById('mv');
+  mv.addEventListener('load', () => {
+    const sec = (performance.now() / 1000).toFixed(1);
+    try { localStorage.setItem('portal.load.ar', sec); } catch (e) {}
+    document.getElementById('load').textContent = `(${sec}초 만에 열림)`;
+  }, { once: true });
+  for (const b of document.querySelectorAll('.tabs button')) b.onclick = () => {
+    document.querySelectorAll('.tabs button').forEach((x) => x.classList.toggle('on', x === b));
+    mv.src = b.dataset.src;
+  };
+  // 실제로 내 방에 심었을 때(AR 시작) SDG 15 도장
+  mv.addEventListener('ar-status', (e) => { if (e.detail.status === 'session-started') SDG.stamp(15, 'ar', '내 방에 나무를 심었어요! SDG 15 도장'); });
+  // iOS Quick Look는 ar-status를 보내지 않아서 버튼 누름으로 대신한다
+  if (/iPhone|iPad/.test(navigator.userAgent)) mv.querySelector('.arbtn').addEventListener('click', () => SDG.stamp(15, 'ar', '내 방에 나무를 심었어요! SDG 15 도장'));
+
+  const Q = [
+    ['나무를 많이 심고 숲을 지키면 지구가 더워지는 것을 늦추는 데 도움이 된다.', true, '맞아요! 나무는 이산화탄소를 흡수해요. SDG 13 기후변화 대응과 연결돼요.'],
+    ['숲이 줄어도 그곳에 살던 동물들은 아무 문제가 없다.', false, '숲은 동물의 집이에요. 숲이 줄면 많은 동물이 살 곳을 잃어요.'],
+  ];
+  let qi = 0;
+  function drawQuiz() {
+    const [q] = Q[qi];
+    document.getElementById('quiz').innerHTML = `<h2>O/X 퀴즈 ${qi + 1} / ${Q.length}</h2><p style="color:inherit;font-weight:650">${q}</p>
+      <div class="ox"><button class="o" data-a="1">O</button><button class="x" data-a="0">X</button></div><div class="fb"></div>`;
+    for (const b of document.querySelectorAll('#quiz .ox button')) b.onclick = async () => {
+      const [, a, why] = Q[qi]; const ok = (b.dataset.a === '1') === a;
+      const fb = document.querySelector('#quiz .fb'); fb.textContent = (ok ? '정답! ' : '다시 생각해 봐요. ') + why; fb.style.color = ok ? 'var(--accent)' : '#e0485f';
+      if (!ok) return;
+      if (qi < Q.length - 1) { setTimeout(() => { qi++; drawQuiz(); }, 1600); return; }
+      await SDG.stamp(13, 'ar-quiz', '퀴즈 통과! SDG 13 기후변화 대응 도장');
+    };
+  }
+  drawQuiz();
+</script>
+</body>
+</html>

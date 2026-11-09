@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SDG 세계 지도</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Batang:wght@400;700&family=Black+Han+Sans&family=Nunito:wght@700;800&family=Cinzel:wght@700&display=swap" rel="stylesheet">
+<style>
+  [hidden] { display: none !important; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; }
+  body { font-family: "Nunito", "Jua", system-ui, sans-serif; transition: background .5s, color .5s; }
+  /* 학년군마다 다른 세계: 1 장난감 나라(파스텔), 2 동화 마을(종이·금빛), 3 판타지 왕국(밤하늘) */
+  body.b1 { --bg: linear-gradient(#bfe3ff 0%, #ffe3f1 60%, #fff4dc 100%); --ink: #2b2d42; --card: #fff; --line: #2b2d42; --acc: #ff6b8b; --sub: #6a6f8a; --font: "Jua", "Nunito", sans-serif; }
+  body.b2 { --bg: radial-gradient(ellipse at 50% 0%, #ffd9a0 0%, #f3dfbd 45%, #d9b98a 100%); --ink: #3b2a1a; --card: #fbf1dc; --line: #6b4a2b; --acc: #b5651d; --sub: #7a6045; --font: "Gowun Batang", serif; }
+  body.b3 { --bg: radial-gradient(ellipse at 50% -10%, #3d3a7a 0%, #1a1838 55%, #0d0c1f 100%); --ink: #f3ecff; --card: rgba(30, 28, 66, .85); --line: #a78bfa; --acc: #ffcc66; --sub: #b8b0d8; --font: "Black Han Sans", sans-serif; }
+  body { background: var(--bg) fixed; color: var(--ink); }
+  .top { display: flex; align-items: center; gap: 10px; padding: 12px max(16px, env(safe-area-inset-right, 0px)) 6px max(16px, env(safe-area-inset-left, 0px)); max-width: 1240px; margin: 0 auto; }
+  .pill { border: 2px solid var(--line); background: var(--card); color: var(--ink); border-radius: 999px; padding: 6px 13px; font-weight: 800; font-size: 14px; text-decoration: none; }
+  .sp { flex: 1; }
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 0 max(16px, env(safe-area-inset-right, 0px)) 60px max(16px, env(safe-area-inset-left, 0px)); }
+  h1 { font-family: var(--font); font-size: clamp(32px, 5vw, 56px); line-height: 1.05; margin: 10px 0 6px; text-wrap: balance; }
+  .lead { margin: 0 0 18px; max-width: 70ch; color: var(--sub); font-size: 16px; }
+  .bands { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 18px; }
+  @media (max-width: 760px) { .bands { grid-template-columns: 1fr; } }
+  .band { text-align: left; border: 3px solid transparent; border-radius: 20px; padding: 14px 16px; cursor: pointer; display: grid; gap: 4px; font: inherit; }
+  .band b { font-size: 22px; }
+  .band span { font-size: 14px; opacity: .85; }
+  .band .en { font-size: 12px; letter-spacing: .08em; font-weight: 800; opacity: .7; }
+  .band.k1 { background: #fff; color: #2b2d42; font-family: "Jua", sans-serif; box-shadow: 0 6px 0 #ff9ab5; }
+  .band.k2 { background: #fbf1dc; color: #3b2a1a; font-family: "Gowun Batang", serif; box-shadow: 0 6px 0 #b5651d; }
+  .band.k3 { background: #221f4a; color: #f3ecff; font-family: "Black Han Sans", sans-serif; box-shadow: 0 6px 0 #6d5bd0; }
+  .band.on { border-color: var(--acc); transform: translateY(-3px); }
+  .intro { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: center; background: var(--card); border: 2px solid var(--line); border-radius: 18px; padding: 14px 16px; margin-bottom: 16px; }
+  .intro .ic { font-size: 44px; }
+  .intro p { margin: 0; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
+  .w { position: relative; display: grid; gap: 6px; align-content: start; text-decoration: none; color: var(--ink); background: var(--card); border: 2px solid var(--line); border-radius: 18px; padding: 14px; transition: transform .15s; min-height: 190px; }
+  .w:hover { transform: translateY(-4px) rotate(-.4deg); }
+  body.b1 .w { border-radius: 26px; box-shadow: 0 6px 0 color-mix(in srgb, var(--g) 70%, white); }
+  body.b2 .w { box-shadow: 0 5px 0 #6b4a2b; background-image: linear-gradient(transparent 92%, rgba(107, 74, 43, .08) 92%); background-size: 100% 22px; }
+  body.b3 .w { box-shadow: 0 0 0 1px rgba(167, 139, 250, .25), 0 10px 30px -10px var(--g); }
+  .w .n { width: 46px; height: 46px; border-radius: 14px; display: grid; place-items: center; background: var(--g); color: #fff; font: 800 22px/1 "Nunito", sans-serif; }
+  body.b2 .w .n { border-radius: 50%; box-shadow: inset 0 0 0 3px rgba(255, 255, 255, .5); }
+  body.b3 .w .n { border-radius: 8px; transform: rotate(45deg); } body.b3 .w .n span { transform: rotate(-45deg); }
+  .w h2 { margin: 0; font-family: var(--font); font-size: 21px; line-height: 1.15; }
+  .w .ko { font-size: 14px; color: var(--sub); }
+  .w p { margin: 0; font-size: 13.5px; color: var(--sub); }
+  .w .words { display: flex; flex-wrap: wrap; gap: 4px; margin-top: auto; }
+  .w .words i { font-style: normal; font-size: 12px; font-weight: 800; border: 1.5px solid var(--line); border-radius: 999px; padding: 1px 7px; opacity: .8; }
+  .w .done { position: absolute; top: 12px; right: 12px; font-size: 13px; font-weight: 800; color: var(--acc); }
+  .w.soon { opacity: .6; pointer-events: none; }
+  .note { margin-top: 18px; font-size: 13.5px; color: var(--sub); }
+</style>
+</head>
+<body class="b1">
+<div class="top"><a class="pill" href="/sdg-worlds/">← 포털</a><span class="sp"></span><a class="pill" href="/sdg-worlds/passport/">SDG 여권</a></div>
+<div class="wrap">
+  <h1 id="h1">SDG 세계 지도</h1>
+  <p class="lead">SDG 17개 목표마다 학년에 맞는 세계가 하나씩 있어요. 누르면 바로 3D 세계로 들어가 이야기를 보고, 직접 걸어 다니며 문제를 해결해요. 영어 낱말을 듣고 배우고, 다 마치면 여권에 도장이 찍혀요.</p>
+  <div class="bands" id="bands">
+    <button class="band k1" data-b="1"><span class="en">GRADE 1–2 · UNITY</span><b>말랑이 장난감 나라</b><span>하늘에 뜬 파스텔 섬, 쉬운 낱말 3개</span></button>
+    <button class="band k2" data-b="2"><span class="en">GRADE 3–4 · UNITY</span><b>동화 마을 이야기</b><span>노을빛 마을, “옛날 옛적에…” 낱말 5개</span></button>
+    <button class="band k3" data-b="3"><span class="en">GRADE 5–6 · UNREAL</span><b>판타지 모험 왕국</b><span>영화 같은 왕국 17곳을 모험</span></button>
+  </div>
+  <div class="intro" id="intro"></div>
+  <div class="grid" id="grid"></div>
+  <p class="note" id="note"></p>
+</div>
+<script src="/sdg-worlds/sdg/sdg.js"></script>
+<script>
+  const COLORS = ["", "#E5243B", "#DDA63A", "#4C9F38", "#C5192D", "#FF3A21", "#26BDE2", "#FCC30B", "#A21942", "#FD6925", "#DD1367", "#FD9D24", "#BF8B2E", "#3F7E44", "#0A97D9", "#56C02B", "#00689D", "#19486A"];
+  const INTRO = {
+    1: ["🫧", "말랑이와 함께 하늘에 뜬 장난감 섬으로! 화면을 누른 곳으로 말랑이가 통통 걸어가요. 물건 위로 가면 저절로 주워요."],
+    2: ["📖", "“Once upon a time…” 동화책을 펼치듯 마을 이야기가 시작돼요. 마을 사람들의 부탁을 들어주며 이야기를 끝까지 써 내려가요."],
+    3: ["🗺️", "언리얼 엔진으로 만든 노을빛 판타지 대륙을 모험해요. 왕국의 현자에게 이야기를 듣고, 빛기둥 아래 보물 다섯 개를 모아 금빛 제단에 바쳐요. PC에서 돌린 게임을 화면으로 받아 와서 한 번에 한 명씩 모험해요."],
+  };
+  const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  let list = [], band = 1;
+  try { band = +(new URLSearchParams(location.search).get("band") || localStorage.getItem("worlds.band") || 1); } catch (e) {}
+  const done = (() => { try { return JSON.parse(localStorage.getItem("worlds.done") || "{}"); } catch (e) { return {}; } })();
+  function render() {
+    document.body.className = "b" + band;
+    document.querySelectorAll(".band").forEach((b) => b.classList.toggle("on", +b.dataset.b === band));
+    document.getElementById("intro").innerHTML = `<span class="ic">${INTRO[band][0]}</span><p>${INTRO[band][1]}</p>`;
+    const ws = list.filter((w) => w.band === band).sort((a, b) => a.goal - b.goal);
+    const cards = [];
+    for (let g = 1; g <= 17; g++) {
+      const w = ws.find((x) => x.goal === g);
+      if (!w) { cards.push(`<div class="w soon" style="--g:${COLORS[g]}"><div class="n"><span>${g}</span></div><h2>준비 중</h2><p>이 세계는 아직 만드는 중이에요.</p></div>`); continue; }
+      cards.push(`<a class="w" style="--g:${COLORS[g]}" href="${w.engine === "unreal" ? "/sdg-worlds/worlds/realm/?r=" + g : "/sdg-worlds/worlds/play/?w=" + w.id}">${done[w.id] ? '<span class="done">✓ 완료</span>' : ""}
+        <div class="n"><span>${g}</span></div><h2>${esc(w.title)}</h2><span class="ko">${esc(w.titleKo)}</span>
+        <p>${esc(w.story?.ko || "")}</p><div class="words">${w.words.map((x) => `<i>${esc(x)}</i>`).join("")}</div></a>`);
+    }
+    document.getElementById("grid").innerHTML = cards.join("");
+    const n = ws.filter((w) => done[w.id]).length;
+    document.getElementById("note").textContent = ws.length ? `${ws.length}개 세계 중 ${n}개를 마쳤어요. 처음 들어갈 때만 조금 기다리면, 다음부터는 바로 열려요.` : "";
+  }
+  document.querySelectorAll(".band").forEach((b) => (b.onclick = () => { band = +b.dataset.b; try { localStorage.setItem("worlds.band", band); } catch (e) {} render(); }));
+  fetch("/sdg-worlds/worlds/list.json").then((r) => r.json()).then((l) => { list = l; render(); }).catch(() => { document.getElementById("grid").textContent = "세계 목록을 불러오지 못했어요."; });
+  render();
+</script>
+</body>
+</html>

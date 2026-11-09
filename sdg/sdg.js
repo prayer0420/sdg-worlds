@@ -39,7 +39,10 @@
   }
 
   // 여권 만들기 창. 실제 이름이 아니라 별명만 받는다.
-  function join(reason) {
+  // 도장 요청이 겹쳐도(세계 완료 알림이 두 번 오는 등) 창은 하나만 띄우고 같은 결과를 나눠 준다
+  let joining = null;
+  function join(reason) { return joining || (joining = openJoin(reason).finally(() => { joining = null; })); }
+  function openJoin(reason) {
     return new Promise((resolve) => {
       const m = document.createElement('div'); m.className = 'sdg-modal';
       const cur = me() || {};
